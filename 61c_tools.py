@@ -2,11 +2,12 @@ from datetime import datetime, timedelta
 import argparse
 import importlib
 import os
+import pathlib
 import shlex
 import subprocess
 import sys
 
-tools_dir = os.path.dirname(__file__)
+tools_dir = pathlib.Path(__file__).parent.absolute()
 tools_git_dir = os.path.join(tools_dir, ".git")
 last_updated_path = os.path.join(tools_dir, ".last_updated")
 

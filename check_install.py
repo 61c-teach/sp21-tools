@@ -1,4 +1,5 @@
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -7,7 +8,7 @@ import traceback
 ASSIGNMENT_NAME_REGEX = r"(\b|-|^)(lab|labs|proj[1-4])(\b|-|$)"
 JAVA_VERSION_REGEX = r"^\w*(java|jdk)\s*version\s*\"([^\"]+)\""
 
-tools_dir = os.path.dirname(__file__)
+tools_dir = pathlib.Path(__file__).parent.absolute()
 tools_git_dir = os.path.join(tools_dir, ".git")
 
 issues = []

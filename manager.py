@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 import os
+import pathlib
 import re
 import requests
 import sys
@@ -13,7 +14,7 @@ ISO_FORMAT_STRING = r"%Y-%m-%dT%H:%M:%S.%f"
 BYTE_PREFIXES = {0: "", 1: "Ki", 2: "Mi", 3: "Gi"}
 VERSION_URL = "https://inst.eecs.berkeley.edu/~cs61c-tar/tools/version.json"
 
-tools_dir = os.path.join(os.path.dirname(__file__))
+tools_dir = pathlib.Path(__file__).parent.absolute()
 programs_dir = os.path.join(tools_dir, "programs")
 version_file_path = os.path.join(tools_dir, "version.json")
 
