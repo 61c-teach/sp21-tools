@@ -7,6 +7,8 @@ import shlex
 import subprocess
 import sys
 
+ISO_FORMAT_STRING = r"%Y-%m-%dT%H:%M:%S.%f"
+
 tools_dir = pathlib.Path(__file__).parent.absolute()
 tools_git_dir = os.path.join(tools_dir, ".git")
 last_updated_path = os.path.join(tools_dir, ".last_updated")
@@ -44,7 +46,7 @@ def update_tools(update_interval=3600, **kwargs):
     last_updated = None
     if os.path.isfile(last_updated_path):
         with open(last_updated_path, "r") as f:
-            last_updated = datetime.fromisoformat(f.read())
+            last_updated = datetime.strptime(f.read().strip(), ISO_FORMAT_STRING)
     if last_updated and last_updated + timedelta(seconds=update_interval) >= datetime.now():
         return
     print(f"Updating 61c-tools...", file=sys.stderr)
