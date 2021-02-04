@@ -22,10 +22,12 @@ try:
     for name in os.listdir(os.path.dirname(tools_dir)):
         if re.search(ASSIGNMENT_NAME_REGEX, name):
             assignment_repo_names.append(name)
-    if len(assignment_repo_names) < 2:
-        issues.append("Error: did not find many assignment repos in parent directory")
-    else:
+    if len(assignment_repo_names) >= 2:
         print(f"Found assignment repos: {assignment_repo_names}")
+    elif len(assignment_repo_names) == 1:
+        print(f"Warning: did not find many assignment repos in parent directory: {assignment_repo_names}")
+    else:
+        issues.append(f"Error: did not find any assignment repos in parent directory")
 except:
     issues.append("Error: could not check for assignment repos in parent directory")
     traceback.print_exc()
