@@ -92,9 +92,12 @@ def update_program(program_name, keep_old_files=False, **kwargs):
 def get_version_data(program_name, program_version="latest", update_interval=3600, **kwargs):
     program_version_data = get_version_json(update_interval)[program_name]
     data = program_version_data[program_version]
-    while "ref" in data:
-        data = program_version_data[data["ref"]]
-    return data
+    for i in range(256):
+        if "ref" in data:
+            data = program_version_data[data["ref"]]
+            continue
+        return data
+    raise Execption("Encountered potential cycle when resolving versions")
 
 def get_version_json(update_interval=3600):
     try:
