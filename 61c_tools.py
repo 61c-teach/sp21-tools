@@ -17,7 +17,7 @@ last_updated_path = os.path.join(tools_dir, ".last_updated")
 manager = importlib.import_module("manager")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("program_name", choices=manager.programs.keys())
+parser.add_argument("program_name", choices=(manager.programs.keys() if manager else None))
 parser.add_argument("-k", "--keep", dest="keep_old_files", help="keep old program versions", action="store_true", default=False)
 parser.add_argument("-u", "--update-interval", dest="update_interval", help="how long to wait between update checks (in seconds) (-1 means never update)", type=int, default=3600)
 parser.add_argument("-v", "--version", dest="program_version", help="use a specific version of the program", type=str, default="latest")
@@ -61,12 +61,13 @@ def update_tools(update_interval=3600, **kwargs):
     try:
         with open(last_updated_path, "w") as f:
             f.write(datetime.now().isoformat())
+
+        subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "fetch", "origin"], cwd=tools_dir)
+        subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "reset", "--hard", "origin/master"], cwd=tools_dir)
+
+        manager = importlib.reload(manager)
     except:
         traceback.print_exc()
-    subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "fetch", "origin"], cwd=tools_dir)
-    subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "reset", "--hard", "origin/master"], cwd=tools_dir)
-
-    manager = importlib.reload(manager)
 
 if __name__ == "__main__":
     CS61C_TOOLS_ARGS = shlex.split(os.environ.get("CS61C_TOOLS_ARGS", ""))

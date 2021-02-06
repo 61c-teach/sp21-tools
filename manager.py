@@ -92,6 +92,7 @@ def update_program(program_name, keep_old_files=False, **kwargs):
             other_vers.remove(latest_ver)
     except Exception as e:
         traceback.print_exc()
+        print(f"Error: failed to update {program_name}")
 
 def get_version_data(program_name, program_version="latest", update_interval=3600, **kwargs):
     program_version_data = get_version_json(update_interval)[program_name]
