@@ -5,7 +5,6 @@ import json
 import os
 import pathlib
 import re
-import requests
 import sys
 import time
 import traceback
@@ -119,6 +118,7 @@ def get_version_json(update_interval=3600):
     except FileNotFoundError:
         pass
     try:
+        import requests
         if update_interval < 0:
             raise Exception("No version data saved, but updating is disabled")
         res = requests.get(VERSION_URL)
@@ -154,6 +154,7 @@ def get_file(path, url, expected_digest):
 
     sys.stderr.write(f"Downloading {filename}...")
     sys.stderr.flush()
+    import requests
     response = requests.get(url, stream=True)
     response.raise_for_status()
     bytes_total = response.headers.get("content-length")
