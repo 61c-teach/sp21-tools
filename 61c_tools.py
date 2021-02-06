@@ -6,6 +6,7 @@ import pathlib
 import shlex
 import subprocess
 import sys
+import traceback
 
 ISO_FORMAT_STRING = r"%Y-%m-%dT%H:%M:%S.%f"
 
@@ -39,19 +40,29 @@ def update_tools(update_interval=3600, **kwargs):
         print("Warning: 61c-tools is not a valid Git repo, updates may be skipped", file=sys.stderr)
         return
 
-    status_output = subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "status", "--porcelain"], cwd=tools_dir)
-    if len(status_output) > 0:
-        print("Warning: 61c-tools has unsaved changes, updates may be skipped", file=sys.stderr)
+    try:
+        status_output = subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "status", "--porcelain"], cwd=tools_dir)
+        if len(status_output) > 0:
+            print("Warning: 61c-tools has unsaved changes, updates may be skipped", file=sys.stderr)
+            return
+    except FileNotFoundError:
+        print("Error: could not run Git. Is it installed?")
         return
     last_updated = None
-    if os.path.isfile(last_updated_path):
-        with open(last_updated_path, "r") as f:
-            last_updated = datetime.strptime(f.read().strip(), ISO_FORMAT_STRING)
+    try:
+        if os.path.isfile(last_updated_path):
+            with open(last_updated_path, "r") as f:
+                last_updated = datetime.strptime(f.read().strip(), ISO_FORMAT_STRING)
+    except:
+        traceback.print_exc()
     if last_updated and last_updated + timedelta(seconds=update_interval) >= datetime.now():
         return
     print(f"Updating 61c-tools...", file=sys.stderr)
-    with open(last_updated_path, "w") as f:
-        f.write(datetime.now().isoformat())
+    try:
+        with open(last_updated_path, "w") as f:
+            f.write(datetime.now().isoformat())
+    except:
+        traceback.print_exc()
     subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "fetch", "origin"], cwd=tools_dir)
     subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "reset", "--hard", "origin/master"], cwd=tools_dir)
 

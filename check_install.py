@@ -13,7 +13,20 @@ tools_git_dir = os.path.join(tools_dir, ".git")
 
 issues = []
 
+try:
+    import requests
+    print("Found required dependencies")
+except ModuleNotFoundError:
+    issues.append("Error: could not find required dependencies. Have you installed them?")
+
+try:
+    subprocess.check_output(["git", "--help"])
+    print("Found Git program")
+except ModuleNotFoundError:
+    issues.append("Error: could not run Git. Is Git installed?")
+
 if not os.path.isfile(os.path.join(tools_git_dir, "config")):
+    print("Couldn't find Git data in repo folder")
     issues.append("Error: 61c-tools is not a valid Git repo")
 else:
     print("61c-tools was cloned properly")
@@ -28,6 +41,7 @@ try:
     elif len(assignment_repo_names) == 1:
         print(f"Warning: did not find many assignment repos in parent directory: {assignment_repo_names}")
     else:
+        print(f"Found assignment repos: {assignment_repo_names}")
         issues.append(f"Error: did not find any assignment repos in parent directory")
 except:
     issues.append("Error: could not check for assignment repos in parent directory")
@@ -44,8 +58,8 @@ try:
         print(f"Unrecognized Java version string:\n{java_version_out}\n")
         raise Exception("Unrecognized Java version string")
 except:
-    issues.append("Error: Java check failed, is it installed and in your PATH?")
     traceback.print_exc()
+    issues.append("Error: Java check failed, is it installed and in your PATH?")
 
 if len(issues) == 0:
     print("Your 61c-tools install looks OK!")

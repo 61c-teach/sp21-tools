@@ -10,8 +10,8 @@ import sys
 import time
 import traceback
 
-ISO_FORMAT_STRING = r"%Y-%m-%dT%H:%M:%S.%f"
 BYTE_PREFIXES = {0: "", 1: "Ki", 2: "Mi", 3: "Gi"}
+ISO_FORMAT_STRING = r"%Y-%m-%dT%H:%M:%S.%f"
 VERSION_URL = "https://inst.eecs.berkeley.edu/~cs61c-tar/tools/version.json"
 
 tools_dir = pathlib.Path(__file__).parent.absolute()
@@ -57,8 +57,11 @@ def run_program(program_name, program_args=[], **kwargs):
         args = program.get_run_args(**kwargs) + program_args
 
         os.execvp(args[0], args)
+    except FileNotFoundError:
+        print(f"Error: could not run {args[0]}. Is it installed?")
+        return
     except KeyboardInterrupt:
-        pass
+        return
 
 def update_programs(**kwargs):
     program_names = kwargs.pop("program_name", programs.keys())
@@ -88,7 +91,7 @@ def update_program(program_name, keep_old_files=False, **kwargs):
         else:
             other_vers.remove(latest_ver)
     except Exception as e:
-        raise e
+        traceback.print_exc()
 
 def get_version_data(program_name, program_version="latest", update_interval=3600, **kwargs):
     program_version_data = get_version_json(update_interval)[program_name]
@@ -101,6 +104,7 @@ def get_version_data(program_name, program_version="latest", update_interval=360
     raise Execption("Encountered potential cycle when resolving versions")
 
 def get_version_json(update_interval=3600):
+    data = None
     try:
         with open(version_file_path, "r") as f:
             _data = f.read()
@@ -113,16 +117,20 @@ def get_version_json(update_interval=3600):
                     return data
     except FileNotFoundError:
         pass
+    try:
+        if update_interval < 0:
+            raise Exception("No version data saved, but updating is disabled")
+        res = requests.get(VERSION_URL)
+        data = res.json()
+        data["_last_checked"] = datetime.now().isoformat()
+        with open(version_file_path, "w") as f:
+            f.write(json.dumps(data))
+        return data
     except Exception as e:
+        if data:
+            traceback.print_exc()
+            return data
         raise e
-    if update_interval < 0:
-        raise Exception("No version data saved, but updating is disabled")
-    res = requests.get(VERSION_URL)
-    data = res.json()
-    data["_last_checked"] = datetime.now().isoformat()
-    with open(version_file_path, "w") as f:
-        f.write(json.dumps(data))
-    return data
 
 def fmt_bytes(size):
     power = 2 ** 10
