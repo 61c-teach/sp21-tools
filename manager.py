@@ -97,13 +97,15 @@ def update_program(program_name, keep_old_files=False, quiet=False, **kwargs):
 
 def get_version_data(program_name, program_version="latest", update_interval=3600, **kwargs):
     program_version_data = get_version_json(update_interval)[program_name]
+    if program_version not in program_version_data:
+        raise Exception(f"Unrecognized {program_name} version: {program_version}")
     data = program_version_data[program_version]
     for i in range(256):
         if "ref" in data:
             data = program_version_data[data["ref"]]
             continue
         return data
-    raise Execption("Encountered potential cycle when resolving versions")
+    raise Exception("Encountered potential cycle when resolving versions")
 
 def get_version_json(update_interval=3600):
     data = None
