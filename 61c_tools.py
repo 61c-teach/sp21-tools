@@ -60,6 +60,10 @@ def update_tools(update_interval=3600, quiet=False, **kwargs):
         traceback.print_exc()
     if last_updated and last_updated + timedelta(seconds=update_interval) >= datetime.now():
         return
+    current_branch = subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "rev-parse", "--abbrev-ref", "HEAD"], cwd=tools_dir).decode("utf-8").strip()
+    if current_branch == "HEAD":
+        print("Warning: 61c-tools has a detached Git HEAD, updates may be skipped", file=sys.stderr)
+        return
     if not quiet:
         print(f"Updating 61c-tools...", file=sys.stderr)
     try:
@@ -67,7 +71,7 @@ def update_tools(update_interval=3600, quiet=False, **kwargs):
             f.write(datetime.now().isoformat())
 
         subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "fetch", "origin"], cwd=tools_dir)
-        subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "reset", "--hard", "origin/master"], cwd=tools_dir)
+        subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "reset", "--hard", f"origin/{current_branch}"], cwd=tools_dir)
 
         manager = importlib.reload(manager)
     except:
