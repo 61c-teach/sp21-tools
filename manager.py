@@ -57,7 +57,7 @@ def run_program(program_name, program_args=[], **kwargs):
 
         os.execvp(args[0], args)
     except FileNotFoundError:
-        print(f"Error: could not run {args[0]}. Is it installed?")
+        print(f"Error: could not run {args[0]}. Is it installed?", file=sys.stderr)
         return
     except KeyboardInterrupt:
         return
@@ -69,7 +69,7 @@ def update_programs(**kwargs):
     for program_name in program_names:
         update_program(program_name, **kwargs)
 
-def update_program(program_name, keep_old_files=False, **kwargs):
+def update_program(program_name, keep_old_files=False, quiet=False, **kwargs):
     try:
         data = get_version_data(program_name, **kwargs)
         program = programs[program_name]
@@ -77,10 +77,12 @@ def update_program(program_name, keep_old_files=False, **kwargs):
         other_vers = program.get_installed_versions()
         latest_ver = data["version"]
         if latest_ver not in other_vers:
-            print(f"Updating {program_name} {other_vers} => {latest_ver}", file=sys.stderr)
-            get_file(program.get_file_path(latest_ver), data["url"], data["sha256"])
+            if not quiet:
+                print(f"Updating {program_name} {other_vers} => {latest_ver}", file=sys.stderr)
+            get_file(program.get_file_path(latest_ver), data["url"], data["sha256"], quiet=quiet)
             if not keep_old_files and len(other_vers) > 0:
-                print(f"Removing {program_name} {other_vers}", file=sys.stderr)
+                if not quiet:
+                    print(f"Removing {program_name} {other_vers}", file=sys.stderr)
                 for other_ver in other_vers:
                     if other_ver != latest_ver:
                         try:
@@ -91,7 +93,7 @@ def update_program(program_name, keep_old_files=False, **kwargs):
             other_vers.remove(latest_ver)
     except Exception as e:
         traceback.print_exc()
-        print(f"Error: failed to update {program_name}")
+        print(f"Error: failed to update {program_name}", file=sys.stderr)
 
 def get_version_data(program_name, program_version="latest", update_interval=3600, **kwargs):
     program_version_data = get_version_json(update_interval)[program_name]
@@ -141,19 +143,20 @@ def fmt_bytes(size):
         n += 1
     return f"{size:.1f}{BYTE_PREFIXES[n]}B"
 
-def get_file(path, url, expected_digest):
+def get_file(path, url, expected_digest, quiet=False):
     try:
         os.mkdir(programs_dir)
     except FileExistsError:
         pass
 
-    is_stderr_interactive = sys.stderr.isatty()
+    is_stderr_interactive = not quiet and sys.stderr.isatty()
 
     temp_path = f"{path}.part"
     filename = os.path.basename(path)
 
-    sys.stderr.write(f"Downloading {filename}...")
-    sys.stderr.flush()
+    if not quiet:
+        sys.stderr.write(f"Downloading {filename}...")
+        sys.stderr.flush()
     import requests
     response = requests.get(url, stream=True)
     response.raise_for_status()
@@ -165,7 +168,8 @@ def get_file(path, url, expected_digest):
             data = response.content
             f.write(data)
             sha256.update(data)
-            print(" OK", file=sys.stderr)
+            if not quiet:
+                print(" OK", file=sys.stderr)
         else:
             bytes_written = 0
             bytes_total = int(bytes_total)
@@ -182,9 +186,10 @@ def get_file(path, url, expected_digest):
                     last_perc = perc
             if is_stderr_interactive:
                 sys.stderr.write("\n")
-            else:
+                sys.stderr.flush()
+            elif not quiet:
                 sys.stderr.write(" Done\n")
-            sys.stderr.flush()
+                sys.stderr.flush()
         digest = sha256.hexdigest()
         if digest != expected_digest:
             raise Exception(f"Download failed: {filename} has bad checksum")

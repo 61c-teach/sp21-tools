@@ -19,6 +19,7 @@ manager = importlib.import_module("manager")
 parser = argparse.ArgumentParser()
 parser.add_argument("program_name", choices=(manager.programs.keys() if manager else None))
 parser.add_argument("-k", "--keep", dest="keep_old_files", help="keep old program versions", action="store_true", default=False)
+parser.add_argument("-q", "--quiet", dest="quiet", help="silence output", action="store_true", default=False)
 parser.add_argument("-u", "--update-interval", dest="update_interval", help="how long to wait between update checks (in seconds) (-1 means never update)", type=int, default=3600)
 parser.add_argument("-v", "--version", dest="program_version", help="use a specific version of the program", type=str, default="latest")
 parser.add_argument("program_args", nargs=argparse.REMAINDER)
@@ -30,23 +31,25 @@ def run(**kwargs):
 
     manager.run_program(**kwargs)
 
-def update_tools(update_interval=3600, **kwargs):
+def update_tools(update_interval=3600, quiet=False, **kwargs):
     global manager
 
     if update_interval < 0:
         return
 
     if not os.path.isfile(os.path.join(tools_git_dir, "config")):
-        print("Warning: 61c-tools is not a valid Git repo, updates may be skipped", file=sys.stderr)
+        if not quiet:
+            print("Warning: 61c-tools is not a valid Git repo, updates may be skipped", file=sys.stderr)
         return
 
     try:
         status_output = subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "status", "--porcelain"], cwd=tools_dir)
         if len(status_output) > 0:
-            print("Warning: 61c-tools has unsaved changes, updates may be skipped", file=sys.stderr)
+            if not quiet:
+                print("Warning: 61c-tools has unsaved changes, updates may be skipped", file=sys.stderr)
             return
     except FileNotFoundError:
-        print("Error: could not run Git. Is it installed?")
+        print("Error: could not run Git. Is it installed?", file=sys.stderr)
         return
     last_updated = None
     try:
@@ -57,7 +60,8 @@ def update_tools(update_interval=3600, **kwargs):
         traceback.print_exc()
     if last_updated and last_updated + timedelta(seconds=update_interval) >= datetime.now():
         return
-    print(f"Updating 61c-tools...", file=sys.stderr)
+    if not quiet:
+        print(f"Updating 61c-tools...", file=sys.stderr)
     try:
         with open(last_updated_path, "w") as f:
             f.write(datetime.now().isoformat())
