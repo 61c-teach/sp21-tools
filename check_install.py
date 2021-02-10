@@ -42,7 +42,7 @@ try:
         print(f"Warning: did not find many assignment repos in parent directory: {assignment_repo_names}")
     else:
         print(f"Found assignment repos: {assignment_repo_names}")
-        issues.append(f"Error: did not find any assignment repos in parent directory")
+        issues.append("Error: did not find any assignment repos in parent directory")
 except:
     issues.append("Error: could not check for assignment repos in parent directory")
     traceback.print_exc()

@@ -6,7 +6,6 @@ import os
 import pathlib
 import re
 import sys
-import time
 import traceback
 
 BYTE_PREFIXES = {0: "", 1: "Ki", 2: "Mi", 3: "Gi"}
@@ -91,7 +90,7 @@ def update_program(program_name, keep_old_files=False, quiet=False, **kwargs):
                             traceback.print_exc()
         else:
             other_vers.remove(latest_ver)
-    except Exception as e:
+    except:
         traceback.print_exc()
         print(f"Error: failed to update {program_name}", file=sys.stderr)
 
@@ -100,7 +99,7 @@ def get_version_data(program_name, program_version="latest", update_interval=360
     if program_version not in program_version_data:
         raise Exception(f"Unrecognized {program_name} version: {program_version}")
     data = program_version_data[program_version]
-    for i in range(256):
+    for _ in range(256):
         if "ref" in data:
             data = program_version_data[data["ref"]]
             continue

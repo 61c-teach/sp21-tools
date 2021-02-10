@@ -65,7 +65,7 @@ def update_tools(update_interval=3600, quiet=False, **kwargs):
         print("Warning: 61c-tools has a detached Git HEAD, updates may be skipped", file=sys.stderr)
         return
     if not quiet:
-        print(f"Updating 61c-tools...", file=sys.stderr)
+        print("Updating 61c-tools...", file=sys.stderr)
     try:
         with open(last_updated_path, "w") as f:
             f.write(datetime.now().isoformat())
