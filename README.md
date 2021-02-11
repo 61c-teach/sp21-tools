@@ -18,4 +18,4 @@ tools
 
 All the folders shown are in the same folder.
 
-Run `pip3 install -r requirements.txt` to install dependencies. Then, run `python3 check_install.py` to verify your install.
+Run `python3 -m pip install -r requirements.txt` to install dependencies. Then, run `python3 check_install.py` to verify your install.
