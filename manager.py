@@ -54,7 +54,13 @@ def run_program(program_name, program_args=[], **kwargs):
         program = programs[program_name]
         args = program.get_run_args(**kwargs) + program_args
 
-        os.execvp(args[0], args)
+        # Windows bug: https://bugs.python.org/issue436259 (wontfix)
+        if sys.platform == 'win32':
+            import subprocess
+            cmd = subprocess.list2cmdline(args)
+            os.execlp(args[0], cmd)
+        else:
+            os.execvp(args[0], args)
     except FileNotFoundError:
         print(f"Error: could not run {args[0]}. Is it installed?", file=sys.stderr)
         return
