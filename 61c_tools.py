@@ -25,11 +25,14 @@ parser.add_argument("-v", "--version", dest="program_version", help="use a speci
 parser.add_argument("program_args", nargs=argparse.REMAINDER)
 
 def run(**kwargs):
-    update_tools(**kwargs)
+    try:
+        update_tools(**kwargs)
 
-    manager.update_programs(**kwargs)
+        manager.update_programs(**kwargs)
 
-    manager.run_program(**kwargs)
+        manager.run_program(**kwargs)
+    except KeyboardInterrupt:
+        sys.exit(1)
 
 def update_tools(update_interval=3600, quiet=False, **kwargs):
     global manager
@@ -56,6 +59,8 @@ def update_tools(update_interval=3600, quiet=False, **kwargs):
         if os.path.isfile(last_updated_path):
             with open(last_updated_path, "r") as f:
                 last_updated = datetime.strptime(f.read().strip(), ISO_FORMAT_STRING)
+    except KeyboardInterrupt as e:
+        raise e
     except:
         traceback.print_exc()
     if last_updated and last_updated + timedelta(seconds=update_interval) >= datetime.now():
@@ -74,6 +79,8 @@ def update_tools(update_interval=3600, quiet=False, **kwargs):
         subprocess.check_output(["git", f"--git-dir={tools_git_dir}", "reset", "--hard", f"origin/{current_branch}"], cwd=tools_dir)
 
         manager = importlib.reload(manager)
+    except KeyboardInterrupt as e:
+        raise e
     except:
         traceback.print_exc()
 

@@ -58,10 +58,12 @@ programs = {
     "venus": Program("venus", "jar"),
 }
 
-def run_program(program_name, program_args=[], **kwargs):
+def run_program(program_name, program_args=None, **kwargs):
     try:
         program = programs[program_name]
-        args = program.get_run_args(**kwargs) + program_args
+        args = program.get_run_args(**kwargs)
+        if program_args:
+            args.extend(program_args)
 
         # Windows bug: https://bugs.python.org/issue436259 (wontfix)
         if sys.platform == 'win32':
@@ -71,10 +73,9 @@ def run_program(program_name, program_args=[], **kwargs):
         else:
             os.execvp(args[0], args)
     except FileNotFoundError:
-        print(f"Error: could not run {args[0]}. Is it installed?", file=sys.stderr)
-        return
-    except KeyboardInterrupt:
-        return
+        raise Exception(f"Error: could not run {args[0]}. Is it installed?")
+    except KeyboardInterrupt as e:
+        raise e
 
 def update_programs(**kwargs):
     program_names = kwargs.pop("program_name", programs.keys())
@@ -105,6 +106,8 @@ def update_program(program_name, keep_old_files=False, quiet=False, **kwargs):
                 get_file(program.get_file_path(latest_ver), url, data["sha256"], quiet=quiet)
                 did_get_file = True
                 break
+            except KeyboardInterrupt as e:
+                raise e
             except Exception as e:
                 if not quiet:
                     traceback.print_exc()
@@ -124,6 +127,8 @@ def update_program(program_name, keep_old_files=False, quiet=False, **kwargs):
                         os.remove(program.get_file_path(other_ver))
                     except FileNotFoundError:
                         traceback.print_exc()
+    except KeyboardInterrupt as e:
+        raise e
     except:
         traceback.print_exc()
         print(f"Error: failed to update {program_name}", file=sys.stderr)
