@@ -24,8 +24,17 @@ class Program:
         return os.path.join(programs_dir, f"{self.name}-{version}.{self.ext}")
     def get_run_args(self, **kwargs):
         version = get_version_data(self.name, **kwargs)["version"]
+        path = self.get_file_path(version)
+        if not os.path.isfile(path):
+            other_versions = self.get_installed_versions()
+            if len(other_versions) < 1:
+                raise Exception(f"Could not find program files for {self.name}")
+            # No version sort data, just pick the first one
+            version = other_versions[0]
+            path = self.get_file_path(version)
+            print(f"Warning: {self.name} {version} is outdated", file=sys.stderr)
         if self.ext == "jar":
-            return ["java", "-jar", self.get_file_path(version)]
+            return ["java", "-jar", path]
         raise Exception(f"Unknown program type: {self.ext}")
     def get_version(self, filename):
         m = re.match(f"^{self.name}-([0-9][0-9a-z.-]+)\\.{self.ext}$", filename)
