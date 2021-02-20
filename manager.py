@@ -90,21 +90,40 @@ def update_program(program_name, keep_old_files=False, quiet=False, **kwargs):
 
         other_vers = program.get_installed_versions()
         latest_ver = data["version"]
-        if latest_ver not in other_vers:
-            if not quiet:
-                print(f"Updating {program_name} {other_vers} => {latest_ver}", file=sys.stderr)
-            get_file(program.get_file_path(latest_ver), data["url"], data["sha256"], quiet=quiet)
-            if not keep_old_files and len(other_vers) > 0:
-                if not quiet:
-                    print(f"Removing {program_name} {other_vers}", file=sys.stderr)
-                for other_ver in other_vers:
-                    if other_ver != latest_ver:
-                        try:
-                            os.remove(program.get_file_path(other_ver))
-                        except FileNotFoundError:
-                            traceback.print_exc()
-        else:
+        if latest_ver in other_vers:
             other_vers.remove(latest_ver)
+            return
+        if not quiet:
+            print(f"Updating {program_name} {other_vers} => {latest_ver}", file=sys.stderr)
+        urls = [data["url"]]
+        if "mirror_urls" in data:
+            urls += data["mirror_urls"]
+        did_get_file = False
+        get_file_errors = []
+        for url in urls:
+            try:
+                get_file(program.get_file_path(latest_ver), url, data["sha256"], quiet=quiet)
+                did_get_file = True
+                break
+            except Exception as e:
+                if not quiet:
+                    traceback.print_exc()
+                get_file_errors.append(e)
+        if not did_get_file:
+            if quiet:
+                for e in get_file_errors:
+                    print(e, file=sys.stderr)
+            print(f"Error: failed to download {program_name}", file=sys.stderr)
+            return
+        if not keep_old_files and len(other_vers) > 0:
+            if not quiet:
+                print(f"Removing {program_name} {other_vers}", file=sys.stderr)
+            for other_ver in other_vers:
+                if other_ver != latest_ver:
+                    try:
+                        os.remove(program.get_file_path(other_ver))
+                    except FileNotFoundError:
+                        traceback.print_exc()
     except:
         traceback.print_exc()
         print(f"Error: failed to update {program_name}", file=sys.stderr)
