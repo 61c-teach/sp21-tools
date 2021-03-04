@@ -68,8 +68,9 @@ def run_program(program_name, program_args=None, **kwargs):
         # Windows bug: https://bugs.python.org/issue436259 (wontfix)
         if sys.platform == 'win32':
             import subprocess
-            cmd = subprocess.list2cmdline(args)
-            os.execlp(args[0], cmd)
+            proc = subprocess.Popen(args)
+            proc.communicate()
+            sys.exit(proc.returncode)
         else:
             os.execvp(args[0], args)
     except FileNotFoundError:
