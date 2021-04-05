@@ -10,7 +10,7 @@ import traceback
 
 BYTE_PREFIXES = {0: "", 1: "Ki", 2: "Mi", 3: "Gi"}
 ISO_FORMAT_STRING = r"%Y-%m-%dT%H:%M:%S.%f"
-VERSION_URL = "https://inst.eecs.berkeley.edu/~cs61c-tar/tools/version.json"
+VERSION_URL = "https://inst.eecs.berkeley.edu/~cs61c/sp21/tools/version.json"
 
 tools_dir = pathlib.Path(__file__).parent.absolute()
 programs_dir = os.path.join(tools_dir, "programs")
